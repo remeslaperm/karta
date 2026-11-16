@@ -13,8 +13,18 @@ onMounted(async () => {
   selectedCategories.value = new Set(categories)
 })
 
+// Порядок эпох в фильтре — хронологический. Категории без известной эпохи идут в конце.
+const PERIOD_ORDER = ['Средневековье', 'Новое время', 'Современность']
+
+function periodRank(category: string): number {
+  const index = PERIOD_ORDER.findIndex((period) => category.startsWith(period))
+  return index === -1 ? PERIOD_ORDER.length : index
+}
+
 const categories = computed(() =>
-  Array.from(new Set(points.value.map((p) => p.category))).sort((a, b) => a.localeCompare(b, 'ru'))
+  Array.from(new Set(points.value.map((p) => p.category))).sort(
+    (a, b) => periodRank(a) - periodRank(b) || a.localeCompare(b, 'ru')
+  )
 )
 
 // Если после загрузки набор категорий меняется (например, перезагрузка данных),
@@ -33,8 +43,7 @@ const filteredPoints = computed(() =>
   <div class="app">
     <header class="app__header">
       <div class="app__heading">
-        <p class="app__eyebrow">Пермский край · Новое время</p>
-        <h1 class="app__title">Карта промыслов и ремёсел</h1>
+        <h1 class="app__title">Карта промыслов и ремесел Пермского края</h1>
       </div>
       <CategoryFilter
         :categories="categories"
@@ -78,12 +87,6 @@ const filteredPoints = computed(() =>
   padding: 1.1rem 1.5rem;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
-}
-
-.app__eyebrow {
-  margin: 0 0 0.2rem;
-  font-size: 0.78rem;
-  color: var(--color-accent);
 }
 
 .app__title {
